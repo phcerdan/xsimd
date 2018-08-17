@@ -21,9 +21,21 @@ foreach(ver ${xsimd_version_defines})
         set(XSIMD_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
     endif()
 endforeach()
-set(${PROJECT_NAME}_VERSION 
+set(${PROJECT_NAME}_VERSION
     ${XSIMD_VERSION_MAJOR}.${XSIMD_VERSION_MINOR}.${XSIMD_VERSION_PATCH})
 message(STATUS "xsimd v${${PROJECT_NAME}_VERSION}")
+
+# Customizable install directories (relative paths), defaults to GNUInstallDirs
+include(GNUInstallDirs)
+if(NOT DEFINED XSIMD_INSTALL_BIN_DIR)
+    set(XSIMD_INSTALL_BIN_DIR ${CMAKE_INSTALL_BINDIR})
+endif()
+if(NOT DEFINED XSIMD_INSTALL_LIB_DIR)
+    set(XSIMD_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
+endif()
+if(NOT DEFINED XSIMD_INSTALL_INCLUDE_DIR)
+    set(XSIMD_INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
+endif()
 
 # Build
 # =====
@@ -98,7 +110,7 @@ set(XSIMD_HEADERS
 
 add_library(xsimd INTERFACE)
 target_include_directories(xsimd INTERFACE $<BUILD_INTERFACE:${XSIMD_INCLUDE_DIR}>
-                                           $<INSTALL_INTERFACE:include>)
+                                           $<INSTALL_INTERFACE:${XSIMD_INSTALL_INCLUDE_DIR}>)
 
 OPTION(ENABLE_FALLBACK "build tests/benchmarks with fallback implementation" OFF)
 OPTION(ENABLE_XTL_COMPLEX "enables support for xcomplex defined in xtl" OFF)
@@ -127,7 +139,6 @@ endif()
 # Installation
 # ============
 
-include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 install(TARGETS xsimd
@@ -138,10 +149,9 @@ export(EXPORT ${PROJECT_NAME}-targets
        FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake")
 
 install(DIRECTORY ${XSIMD_INCLUDE_DIR}/xsimd
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+        DESTINATION ${XSIMD_INSTALL_INCLUDE_DIR})
 
-# GNUInstallDirs "DATADIR" wrong here; CMake search path wants "share".
-set(XSIMD_CMAKECONFIG_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}" CACHE STRING "install path for xsimdConfig.cmake")
+set(XSIMD_CMAKECONFIG_INSTALL_DIR "${XSIMD_INSTALL_LIB_DIR}/cmake/${PROJECT_NAME}" CACHE STRING "relative install path for xsimdConfig.cmake")
 
 configure_package_config_file(${PROJECT_NAME}Config.cmake.in
                               "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
